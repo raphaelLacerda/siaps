@@ -415,8 +415,9 @@ def download_single(
 
 def download_all(equipes_filter: list = None):
     """Baixa todos os indicadores e competências do arquivo de configuração.
-    Se equipes_filter for informado, baixa apenas os grupos que contenham
-    ao menos uma das equipes listadas.
+    equipes_filter é uma lista de conjuntos de equipes. Cada elemento pode ser:
+      - uma equipe simples: ['eMulti']  → casa grupos que contenham eMulti
+      - um conjunto via &: ['eAP', 'eSF'] → casa grupos que contenham AMBAS
     """
     ensure_directories()
     token = get_token()
@@ -426,18 +427,17 @@ def download_all(equipes_filter: list = None):
     equipes_config = config.get("equipes", [])
 
     if equipes_filter:
-        equipes_filter_upper = [e.upper() for e in equipes_filter]
-        equipes_config = [
-            grupo
-            for grupo in equipes_config
-            if any(
-                sg.upper() in equipes_filter_upper for sg in grupo.get("sgEquipes", [])
-            )
-        ]
+        def grupo_matches(grupo):
+            sg = {s.upper() for s in grupo.get("sgEquipes", [])}
+            for group_set in equipes_filter:
+                if all(e.upper() in sg for e in group_set):
+                    return True
+            return False
+
+        equipes_config = [g for g in equipes_config if grupo_matches(g)]
         if not equipes_config:
-            print(
-                f"Nenhum grupo encontrado para as equipes: {', '.join(equipes_filter)}"
-            )
+            filtro_display = ', '.join('&'.join(gs) for gs in equipes_filter)
+            print(f"Nenhum grupo encontrado para o filtro: {filtro_display}")
             return
 
     print("=" * 70)
@@ -446,7 +446,8 @@ def download_all(equipes_filter: list = None):
     print(f"Competências: {', '.join(competencias)}")
     print(f"Grupos de equipes: {len(equipes_config)}")
     if equipes_filter:
-        print(f"Filtro de equipes: {', '.join(equipes_filter)}")
+        filtro_display = ', '.join('&'.join(gs) for gs in equipes_filter)
+        print(f"Filtro de equipes: {filtro_display}")
     print("=" * 70)
 
     total_downloads = 0
@@ -476,7 +477,8 @@ def download_all(equipes_filter: list = None):
 
 
 def main():
-    equipes_filter = sys.argv[1:] if len(sys.argv) > 1 else None
+    # Cada argumento pode ser uma equipe simples (eMulti) ou grupo ligado por & (eAP&eSF)
+    equipes_filter = [arg.split('&') for arg in sys.argv[1:]] if len(sys.argv) > 1 else None
     download_all(equipes_filter)
 
 
