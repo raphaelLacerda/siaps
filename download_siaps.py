@@ -7,12 +7,14 @@ Lê configurações do arquivo equipes_indicadores.json
 import requests
 import json
 import sys
+import re
 from datetime import datetime
 from pathlib import Path
 
 try:
     import openpyxl
     from openpyxl.styles import Font
+
     HAS_OPENPYXL = True
 except ImportError:
     HAS_OPENPYXL = False
@@ -24,31 +26,6 @@ DOWNLOADS_DIR = BASE_DIR / "downloads"
 CSV_DIR = DOWNLOADS_DIR / "csv"
 XLSX_DIR = DOWNLOADS_DIR / "xlsx"
 
-# Mapeamento de nomes de indicadores para slugs
-INDICADOR_SLUGS = {
-    "maisAcesso": "maisAcesso",
-    "Mais Acesso": "maisAcesso",
-    "Desenvolvimento Infantil": "desenvolvimentoInfantil",
-    "Gestão e Puorpério": "gestaoPuerperio",
-    "Gestão e Puerpério": "gestaoPuerperio",
-    "Gestação": "gestacao",
-    "Diabetes": "diabetes",
-    "Hipertensão": "hipertensao",
-    "Pessoa Idosa": "pessoaIdosa",
-    "Prevenção do Câncer": "prevencaoCancer",
-    "1ª Consulta Odontológica": "primeiraConsultaOdontologica",
-    "Tratamento Odontológico concluído": "tratamentoOdontologicoConcluido",
-    "Taxa de exodontias": "taxaExodontias",
-    "Escovação Supervisionada": "escovacaoSupervisionada",
-    "Procedimentos Odontológicos preventivos": "procedimentosOdontologicosPreventivos",
-    "Tratamento Restaurador Atraumático": "tratamentoRestauradorAtraumatico",
-    "Média de atendimentos da eMulti por pessoa": "mediaAtendimentosEMulti",
-    "Ações interprofissionais realizadas pela eMulti na APS": "acoesInterprofissionaisEMulti",
-    "IST (HIV/Sífilis/Hepatites B e C)": "ist",
-    "Tuberculose": "tuberculose",
-    "Diabetes e/ou Hipertensão": "diabetesHipertensao",
-}
-
 
 def ensure_directories():
     """Cria diretórios de download se não existirem"""
@@ -59,24 +36,93 @@ def ensure_directories():
 def get_token():
     """Obtém token do .env"""
     env_path = BASE_DIR / ".env"
-    with open(env_path, 'r') as f:
+    with open(env_path, "r") as f:
         for line in f:
             line = line.strip()
-            if line.startswith('bearer_token='):
-                return line.split('=', 1)[1]
+            if line.startswith("bearer_token="):
+                return line.split("=", 1)[1]
     raise ValueError("Token não encontrado no .env")
 
 
 def load_config():
     """Carrega configurações do arquivo equipes_indicadores.json"""
     config_path = BASE_DIR / "equipes_indicadores.json"
-    with open(config_path, 'r', encoding='utf-8') as f:
+    with open(config_path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
-def get_slug(nome_indicador: str) -> str:
-    """Retorna o slug para um nome de indicador"""
-    return INDICADOR_SLUGS.get(nome_indicador, nome_indicador.replace(" ", "").replace("/", ""))
+def slugify(text: str) -> str:
+    """Converte texto para slug (lowercase, hífens)
+    Ex: 'Pessoa Idosa' -> 'pessoa-idosa'
+    Ex: 'IST (HIV/Sífilis/Hepatites B e C)' -> 'ist-hiv-sifilis-hepatites-b-e-c'
+    """
+    # Remove acentos
+    acentos = {
+        "á": "a",
+        "à": "a",
+        "ã": "a",
+        "â": "a",
+        "ä": "a",
+        "é": "e",
+        "è": "e",
+        "ê": "e",
+        "ë": "e",
+        "í": "i",
+        "ì": "i",
+        "î": "i",
+        "ï": "i",
+        "ó": "o",
+        "ò": "o",
+        "õ": "o",
+        "ô": "o",
+        "ö": "o",
+        "ú": "u",
+        "ù": "u",
+        "û": "u",
+        "ü": "u",
+        "ç": "c",
+        "ñ": "n",
+        "Á": "a",
+        "À": "a",
+        "Ã": "a",
+        "Â": "a",
+        "Ä": "a",
+        "É": "e",
+        "È": "e",
+        "Ê": "e",
+        "Ë": "e",
+        "Í": "i",
+        "Ì": "i",
+        "Î": "i",
+        "Ï": "i",
+        "Ó": "o",
+        "Ò": "o",
+        "Õ": "o",
+        "Ô": "o",
+        "Ö": "o",
+        "Ú": "u",
+        "Ù": "u",
+        "Û": "u",
+        "Ü": "u",
+        "Ç": "c",
+        "Ñ": "n",
+    }
+    for char, replacement in acentos.items():
+        text = text.replace(char, replacement)
+
+    # Lowercase
+    text = text.lower()
+
+    # Substitui caracteres especiais por espaço
+    text = re.sub(r"[^a-z0-9\s]", " ", text)
+
+    # Substitui múltiplos espaços por um
+    text = re.sub(r"\s+", " ", text).strip()
+
+    # Substitui espaços por hífen
+    text = text.replace(" ", "-")
+
+    return text
 
 
 def format_equipes_name(equipes: list) -> str:
@@ -92,9 +138,18 @@ def format_competencia(competencia: str) -> str:
 def format_competencia_display(competencia: str) -> str:
     """Converte 202504 para ABR/25"""
     meses = {
-        "01": "JAN", "02": "FEV", "03": "MAR", "04": "ABR",
-        "05": "MAI", "06": "JUN", "07": "JUL", "08": "AGO",
-        "09": "SET", "10": "OUT", "11": "NOV", "12": "DEZ"
+        "01": "JAN",
+        "02": "FEV",
+        "03": "MAR",
+        "04": "ABR",
+        "05": "MAI",
+        "06": "JUN",
+        "07": "JUL",
+        "08": "AGO",
+        "09": "SET",
+        "10": "OUT",
+        "11": "NOV",
+        "12": "DEZ",
     }
     comp = competencia.replace("-", "")
     ano = comp[2:4]
@@ -102,7 +157,9 @@ def format_competencia_display(competencia: str) -> str:
     return f"{meses[mes]}/{ano}"
 
 
-def get_total_records(competencia: str, indicador: int, equipes: list, token: str) -> int:
+def get_total_records(
+    competencia: str, indicador: int, equipes: list, token: str
+) -> int:
     """Faz request inicial para saber o total de registros"""
     base_url = "https://apisiaps.saude.gov.br/componente/qualidade/visao-competencia"
 
@@ -114,14 +171,8 @@ def get_total_records(competencia: str, indicador: int, equipes: list, token: st
         "competencias": format_competencia(competencia),
         "coMunicipioIbge": "530010",
         "indicadores": indicador,
-        "stEquipeHomologada": "S"
+        "sgEquipes": equipes,
     }
-
-    # Adiciona cada equipe como parâmetro separado
-    for eq in equipes:
-        if "sgEquipes" not in params:
-            params["sgEquipes"] = []
-        params["sgEquipes"] = equipes
 
     headers = {"Authorization": token}
 
@@ -132,7 +183,9 @@ def get_total_records(competencia: str, indicador: int, equipes: list, token: st
     return data.get("total", 0)
 
 
-def fetch_data(competencia: str, indicador: int, equipes: list, total: int, token: str) -> list:
+def fetch_data(
+    competencia: str, indicador: int, equipes: list, total: int, token: str
+) -> list:
     """Busca todos os dados"""
     base_url = "https://apisiaps.saude.gov.br/componente/qualidade/visao-competencia"
 
@@ -144,8 +197,7 @@ def fetch_data(competencia: str, indicador: int, equipes: list, total: int, toke
         "competencias": format_competencia(competencia),
         "coMunicipioIbge": "530010",
         "indicadores": indicador,
-        "stEquipeHomologada": "S",
-        "sgEquipes": equipes
+        "sgEquipes": equipes,
     }
 
     headers = {"Authorization": token}
@@ -170,26 +222,40 @@ def process_data(raw_data: list) -> list:
                     "INE": equipe.get("coEquipe", ""),
                     "NOME DA EQUIPE": equipe.get("noEquipe", ""),
                     "SIGLA DA EQUIPE": equipe.get("sgEquipe", ""),
-                    "NÚMERO TOTAL DE ATENDIMENTOS POR DEMANDA PROGRAMADA": indicador.get("numerador", 0),
-                    "NÚMERO TOTAL DE ATENDIMENTOS POR TODOS OS TIPOS DE DEMANDAS (ESPONTÂNEAS E PROGRAMADAS)": indicador.get("denominador", 0),
-                    "PONTUAÇÃO": indicador.get("scoreFormatado", "0,00")
+                    "NÚMERO TOTAL DE ATENDIMENTOS POR DEMANDA PROGRAMADA": indicador.get(
+                        "numerador", 0
+                    ),
+                    "NÚMERO TOTAL DE ATENDIMENTOS POR TODOS OS TIPOS DE DEMANDAS (ESPONTÂNEAS E PROGRAMADAS)": indicador.get(
+                        "denominador", 0
+                    ),
+                    "PONTUAÇÃO": indicador.get("scoreFormatado", "0,00"),
                 }
                 rows.append(row)
     return rows
 
 
-def generate_header(competencia: str, indicador_nome: str) -> list:
+def generate_header(competencia: str, indicador_nome: str, equipes: list) -> list:
     """Gera o cabeçalho do relatório"""
     now = datetime.now()
 
     meses_pt = {
-        1: "janeiro", 2: "fevereiro", 3: "março", 4: "abril",
-        5: "maio", 6: "junho", 7: "julho", 8: "agosto",
-        9: "setembro", 10: "outubro", 11: "novembro", 12: "dezembro"
+        1: "janeiro",
+        2: "fevereiro",
+        3: "março",
+        4: "abril",
+        5: "maio",
+        6: "junho",
+        7: "julho",
+        8: "agosto",
+        9: "setembro",
+        10: "outubro",
+        11: "novembro",
+        12: "dezembro",
     }
 
     data_geracao = f"{now.day:02d} de {meses_pt[now.month]} de {now.year} - {now.hour:02d}:{now.minute:02d}h"
     comp_display = format_competencia_display(competencia)
+    equipes_display = ", ".join(equipes)
 
     return [
         "Ministério da Saúde MS",
@@ -207,40 +273,48 @@ def generate_header(competencia: str, indicador_nome: str) -> list:
         f"Indicador: {indicador_nome}",
         f"Competência selecionada: {comp_display}",
         "Condição das Equipes: Todas as equipes do Município",
-        "Tipo de Equipe: eAP, eSF",
-        ""
+        f"Tipo de Equipe: {equipes_display}",
+        "",
     ]
 
 
-def write_csv(rows: list, competencia: str, indicador_nome: str, output_path: Path):
+def write_csv(
+    rows: list, competencia: str, indicador_nome: str, equipes: list, output_path: Path
+):
     """Escreve arquivo CSV"""
-    header_lines = generate_header(competencia, indicador_nome)
+    header_lines = generate_header(competencia, indicador_nome, equipes)
 
     columns = [
-        "CNES", "ESTABELECIMENTO", "TIPO DO ESTABELECIMENTO", "INE",
-        "NOME DA EQUIPE", "SIGLA DA EQUIPE",
+        "CNES",
+        "ESTABELECIMENTO",
+        "TIPO DO ESTABELECIMENTO",
+        "INE",
+        "NOME DA EQUIPE",
+        "SIGLA DA EQUIPE",
         "NÚMERO TOTAL DE ATENDIMENTOS POR DEMANDA PROGRAMADA",
         "NÚMERO TOTAL DE ATENDIMENTOS POR TODOS OS TIPOS DE DEMANDAS (ESPONTÂNEAS E PROGRAMADAS)",
-        "PONTUAÇÃO"
+        "PONTUAÇÃO",
     ]
 
-    with open(output_path, 'w', encoding='utf-8-sig', newline='') as f:
+    with open(output_path, "w", encoding="utf-8-sig", newline="") as f:
         for line in header_lines:
-            f.write(line + '\n')
+            f.write(line + "\n")
 
-        f.write(';'.join(columns) + '\n')
+        f.write(";".join(columns) + "\n")
 
         for row in rows:
             values = []
             for col in columns:
                 val = str(row.get(col, ""))
                 values.append(f'"{val}\t"')
-            f.write(';'.join(values) + '\n')
+            f.write(";".join(values) + "\n")
 
     print(f"    CSV: {output_path.name}")
 
 
-def write_xlsx(rows: list, competencia: str, indicador_nome: str, output_path: Path):
+def write_xlsx(
+    rows: list, competencia: str, indicador_nome: str, equipes: list, output_path: Path
+):
     """Escreve arquivo XLSX"""
     if not HAS_OPENPYXL:
         return
@@ -249,17 +323,21 @@ def write_xlsx(rows: list, competencia: str, indicador_nome: str, output_path: P
     ws = wb.active
     ws.title = "Relatório"
 
-    header_lines = generate_header(competencia, indicador_nome)
+    header_lines = generate_header(competencia, indicador_nome, equipes)
 
     for i, line in enumerate(header_lines, 1):
         ws.cell(row=i, column=1, value=line)
 
     columns = [
-        "CNES", "ESTABELECIMENTO", "TIPO DO ESTABELECIMENTO", "INE",
-        "NOME DA EQUIPE", "SIGLA DA EQUIPE",
+        "CNES",
+        "ESTABELECIMENTO",
+        "TIPO DO ESTABELECIMENTO",
+        "INE",
+        "NOME DA EQUIPE",
+        "SIGLA DA EQUIPE",
         "NÚMERO TOTAL DE ATENDIMENTOS POR DEMANDA PROGRAMADA",
         "NÚMERO TOTAL DE ATENDIMENTOS POR TODOS OS TIPOS DE DEMANDAS (ESPONTÂNEAS E PROGRAMADAS)",
-        "PONTUAÇÃO"
+        "PONTUAÇÃO",
     ]
 
     header_row = len(header_lines) + 1
@@ -273,26 +351,34 @@ def write_xlsx(rows: list, competencia: str, indicador_nome: str, output_path: P
             ws.cell(row=i, column=j, value=val)
 
     for col_idx, col_name in enumerate(columns, 1):
-        ws.column_dimensions[openpyxl.utils.get_column_letter(col_idx)].width = max(15, len(col_name) // 2)
+        ws.column_dimensions[openpyxl.utils.get_column_letter(col_idx)].width = max(
+            15, len(col_name) // 2
+        )
 
     wb.save(output_path)
     print(f"    XLSX: {output_path.name}")
 
 
-def download_single(competencia: str, indicador: dict, equipes: list, token: str) -> bool:
+def download_single(
+    competencia: str, indicador: dict, equipes: list, token: str
+) -> bool:
     """Baixa dados de uma competência, indicador e equipes específicos"""
     indicador_nome = indicador["nome"]
     indicador_codigo = indicador["codigo"]
-    indicador_slug = get_slug(indicador_nome)
+    indicador_slug = slugify(indicador_nome)
     equipes_name = format_equipes_name(equipes)
 
     # Formatar competência para nome do arquivo (2025-04)
-    comp_format = competencia if "-" in competencia else f"{competencia[:4]}-{competencia[4:]}"
+    comp_format = (
+        competencia if "-" in competencia else f"{competencia[:4]}-{competencia[4:]}"
+    )
 
     # Nome do arquivo: <equipe>-<indicador>-<competencia>-relatorio-competencia
     base_name = f"{equipes_name}-{indicador_slug}-{comp_format}-relatorio-competencia"
 
-    print(f"\n  [{indicador_nome}] Equipes: {equipes_name} | Competência: {comp_format}")
+    print(
+        f"\n  [{indicador_nome}] Equipes: {equipes_name} | Competência: {comp_format}"
+    )
 
     try:
         # Primeiro, verificar total de registros
@@ -311,8 +397,12 @@ def download_single(competencia: str, indicador: dict, equipes: list, token: str
         print(f"    Processados: {len(rows)} linhas")
 
         # Salvar arquivos
-        write_csv(rows, competencia, indicador_nome, CSV_DIR / f"{base_name}.csv")
-        write_xlsx(rows, competencia, indicador_nome, XLSX_DIR / f"{base_name}.xlsx")
+        write_csv(
+            rows, competencia, indicador_nome, equipes, CSV_DIR / f"{base_name}.csv"
+        )
+        write_xlsx(
+            rows, competencia, indicador_nome, equipes, XLSX_DIR / f"{base_name}.xlsx"
+        )
 
         return True
     except requests.exceptions.HTTPError as e:
@@ -323,8 +413,11 @@ def download_single(competencia: str, indicador: dict, equipes: list, token: str
         return False
 
 
-def download_all():
-    """Baixa todos os indicadores e competências do arquivo de configuração"""
+def download_all(equipes_filter: list = None):
+    """Baixa todos os indicadores e competências do arquivo de configuração.
+    Se equipes_filter for informado, baixa apenas os grupos que contenham
+    ao menos uma das equipes listadas.
+    """
     ensure_directories()
     token = get_token()
     config = load_config()
@@ -332,11 +425,28 @@ def download_all():
     competencias = config.get("competencias", [])
     equipes_config = config.get("equipes", [])
 
+    if equipes_filter:
+        equipes_filter_upper = [e.upper() for e in equipes_filter]
+        equipes_config = [
+            grupo
+            for grupo in equipes_config
+            if any(
+                sg.upper() in equipes_filter_upper for sg in grupo.get("sgEquipes", [])
+            )
+        ]
+        if not equipes_config:
+            print(
+                f"Nenhum grupo encontrado para as equipes: {', '.join(equipes_filter)}"
+            )
+            return
+
     print("=" * 70)
     print("Download em lote - SIAPS")
     print("=" * 70)
     print(f"Competências: {', '.join(competencias)}")
     print(f"Grupos de equipes: {len(equipes_config)}")
+    if equipes_filter:
+        print(f"Filtro de equipes: {', '.join(equipes_filter)}")
     print("=" * 70)
 
     total_downloads = 0
@@ -366,19 +476,8 @@ def download_all():
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("Uso:")
-        print("  python download_siaps.py all  - Baixa todos do equipes_indicadores.json")
-        print("")
-        print("O script lê as configurações de equipes_indicadores.json")
-        print("e salva os arquivos em downloads/csv e downloads/xlsx")
-        sys.exit(1)
-
-    if sys.argv[1] == "all":
-        download_all()
-        return
-
-    print("Comando não reconhecido. Use 'all' para baixar todos.")
+    equipes_filter = sys.argv[1:] if len(sys.argv) > 1 else None
+    download_all(equipes_filter)
 
 
 if __name__ == "__main__":

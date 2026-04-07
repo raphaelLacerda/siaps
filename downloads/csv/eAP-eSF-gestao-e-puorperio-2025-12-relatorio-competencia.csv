@@ -1,7 +1,7 @@
 ﻿Ministério da Saúde MS
 Secretaria de Atenção Primária à Saúde SAPS
 Sistema de Informação para a Atenção Primária à Saúde – SIAPS
-Dado gerado em: 06 de abril de 2026 - 22:11h
+Dado gerado em: 06 de abril de 2026 - 22:27h
 Relatório Qualidade - Visão por Competência
 Dado Preliminar
 
@@ -10,7 +10,7 @@ UF: DF
 Município: 530010 / BRASÍLIA
 
 Filtro:
-Indicador: Gestão e Puerpério
+Indicador: Gestão e Puorpério
 Competência selecionada: DEZ/25
 Condição das Equipes: Todas as equipes do Município
 Tipo de Equipe: eAP, eSF
@@ -302,7 +302,6 @@ CNES;ESTABELECIMENTO;TIPO DO ESTABELECIMENTO;INE;NOME DA EQUIPE;SIGLA DA EQUIPE;
 "0011258	";"UBS 1 SOBRADINHO II	";"CENTRO DE SAUDE/UNIDADE BASICA	";"0001671367	";"ESF 0622/12 - MARROM	";"eSF	";"582	";"18	";"32,33	"
 "7526504	";"UBS 05 RIACHO FUNDO II	";"CENTRO DE SAUDE/UNIDADE BASICA	";"0002268817	";"ESF 17 UBS 05 RIACHO FUNDO II	";"eSF	";"1337	";"37	";"36,14	"
 "0957755	";"UBS 7 BURITIZINHO SOBRADINHO II	";"CENTRO DE SAUDE/UNIDADE BASICA	";"0001717170	";"ESF 0631/22 - VERDE SOB	";"eSF	";"131	";"5	";"26,20	"
-"3513564	";"UBS 02 ESTRUTURAL	";"CENTRO DE SAUDE/UNIDADE BASICA	";"0002493276	";"ESF 13 - UBS 02 ESTRUTURAL	";"eSF	";"1407	";"45	";"31,27	"
 "9768637	";"UBS 20 PLANALTINA	";"CENTRO DE SAUDE/UNIDADE BASICA	";"0001671243	";"ESF 0389/46 - DELTA	";"eSF	";"963	";"29	";"33,21	"
 "3144577	";"UBS 11 PONTE ALTA NORTE GAMA	";"CENTRO DE SAUDE/UNIDADE BASICA	";"0001620932	";"0223/38	";"eSF	";"668	";"16	";"41,75	"
 "2672235	";"UBS 9 SANTOS DUMONT PLANALTINA	";"CENTRO DE SAUDE/UNIDADE BASICA	";"0002533219	";"ESF 57 - CEU AZUL	";"eSF	";"369	";"10	";"36,90	"

@@ -1,70 +1,89 @@
+# SIAPS — Download de Relatórios por Competência
 
-# URL de acessos
+Script para baixar dados do SIAPS (Visão por Competência) e gerar arquivos CSV e XLSX a partir
+das configurações definidas em `equipes_indicadores.json`.
 
-https://apisiaps.saude.gov.br/componente/qualidade/visao-competencia?page=0&size=5&search=&sort=string&competencias=202504&coMunicipioIbge=530010&sgEquipes=eAP&sgEquipes=eSF&indicadores=108
+## O que o programa faz
 
+- Lê `equipes_indicadores.json` (lista de competências e grupos de equipes + indicadores).
+- Para cada combinação competência × indicador × grupo de equipes, faz chamadas à API do SIAPS
+	e baixa os registros disponíveis.
+- Gera arquivos CSV em `downloads/csv/` e, se o pacote `openpyxl` estiver instalado, gera também
+	arquivos XLSX em `downloads/xlsx/`.
 
-# Competências (variável - competências)
+## Requisitos
 
-2025-04
-2025-08
-2025-12
+- Python 3.8+
+- Biblioteca `requests` (obrigatória)
+- Biblioteca `openpyxl` (opcional — gera arquivos `.xlsx`)
 
+Instale dependências via pip, por exemplo:
 
+```bash
+pip install requests openpyxl
+```
 
-# Equipes eSF e eAP (variável - sgEquipes=eAP&sgEquipes=eSF)
+## Configuração
 
-## Indicadores (variável - indicadores)
+- Token de autorização: crie um arquivo `.env` na raiz do projeto com a variável `bearer_token`:
 
-* Nome: maisAcesso | codigo: 110
-* Nome: Desenvolvimento Infantil | codigo: 108
-* Nome: Gestão e Puorpério | codigo: 107
-* Nome: Hipertensão | codigo: 104
-* Nome: Pessoa Idosa | codigo: 106
-* Nome: Prevenção do Câncer | codigo: 109
+```
+bearer_token=Bearer <seu_token_aqui>
+```
 
+- Arquivo de configuração: `equipes_indicadores.json` — formato esperado:
 
+```json
+{
+	"competencias": ["2025-04", "2025-08", "2025-12"],
+	"equipes": [
+		{
+			"sgEquipes": ["eAP", "eSF"],
+			"indicadores": [ {"nome": "maisAcesso", "codigo": 110}, ... ]
+		},
+		{
+			"sgEquipes": ["eSB"],
+			"indicadores": [ {"nome": "1ª Consulta Odontológica", "codigo": 111}, ... ]
+		}
+	]
+}
+```
 
+- Observações importantes:
+	- O script atualmente usa `coMunicipioIbge=530010` (Brasília). Altere no código se quiser outro município.
+	- Os slugs dos indicadores são mapeados no dicionário `INDICADOR_SLUGS` em `download_siaps.py`.
 
-# Equipes eSB (variável - sgEquipes=eSB)
+## Uso
 
-## Indicadores (variável - indicadores)
+Baixa todos os relatórios definidos em `equipes_indicadores.json`:
 
-* Nome: 1ª Consulta Odontológica | codigo: 111
-* Nome: Tratamento Odontológico concluído | codigo: 112
-* Nome: Taxa de exodontias | codigo: 113
-* Nome: Escovação Supervisionada | codigo: 114
-* Nome: Procedimentos Odontológicos preventivos | codigo: 115
-* Nome: Tratamento Restaurador Atraumático | codigo: 116
+```bash
+python download_siaps.py all
+```
 
+Saída padrão na execução mostra progresso e mensagens de erro HTTP quando ocorrem.
 
+## Saída
 
-# Equipes eMulti (variável - sgEquipes=eMulti)
+- CSVs: `downloads/csv/` — cada arquivo contém um cabeçalho descritivo seguido por colunas separadas
+	por ponto-e-vírgula. O encode usado é `utf-8-sig` para compatibilidade com Excel.
+- XLSX: `downloads/xlsx/` — gerado apenas se `openpyxl` estiver instalado.
 
-## Indicadores (variável - indicadores)
+## Estrutura dos CSVs
 
-* Nome: Média de atendimentos da eMulti por pessoa | codigo: 117
-* Nome: Ações interprofissionais realizadas pela eMulti na APS | codigo: 118
+- Colunas principais:
+	- `CNES`, `ESTABELECIMENTO`, `TIPO DO ESTABELECIMENTO`, `INE`, `NOME DA EQUIPE`, `SIGLA DA EQUIPE`,
+		`NÚMERO TOTAL DE ATENDIMENTOS POR DEMANDA PROGRAMADA`, `NÚMERO TOTAL DE ATENDIMENTOS POR TODOS OS TIPOS DE DEMANDAS (ESPONTÂNEAS E PROGRAMADAS)`, `PONTUAÇÃO`.
 
+## Notas e sugestões
 
+- Para adicionar/alterar equipes ou indicadores, edite `equipes_indicadores.json` seguindo o exemplo.
+- Para mudar o município alvo, atualize `coMunicipioIbge` nas funções `get_total_records` e `fetch_data`.
+- Se desejar gerar apenas um indicador/competência, considerar adicionar parâmetros de linha de comando (melhoria futura).
 
-# Equipes eCR (variável - sgEquipes=eCR)
+---
 
-## Indicadores (variável - indicadores)
+Arquivo de configuração: `equipes_indicadores.json` — edite conforme necessário.
 
-* Nome: Mais Acesso | codigo: 121
-* Nome: Gestação | codigo: 122
-* Nome: IST (HIV/Sífilis/Hepatites B e C) | codigo: 123
-* Nome: Tuberculose | codigo: 124
-
-# Equipes eAPP (variável - sgEquipes=eAPP)
-
-## Indicadores (variável - indicadores)
-
-* Nome: Mais Acesso | codigo: 125
-* Nome: Gestação | codigo: 126
-* Nome: Diabetes e/ou Hipertensão | codigo: 127
-* Nome: IST (HIV/Sífilis/Hepatites B e C) | codigo: 128
-* Nome: Tuberculose | codigo: 129
-* Nome: Prevenção do Câncer | codigo: 130
+Relatórios gerados em `downloads/csv` e `downloads/xlsx`.
 
