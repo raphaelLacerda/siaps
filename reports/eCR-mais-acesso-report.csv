@@ -1,0 +1,49 @@
+﻿RELATÓRIO DE EVOLUÇÃO - Mais Acesso
+Equipes: eCR
+Competências: ABR/25, AGO/25, DEZ/25
+
+==================================================
+RESUMO DAS VARIAÇÕES
+==================================================
+ABR_25: Média de pontuação = 37.88
+AGO_25: Média de pontuação = 45.93
+DEZ_25: Média de pontuação = 34.86
+
+% de crescimento entre 2025-04 e 2025-08: 19.89%
+% de crescimento entre 2025-08 e 2025-12: -19.97%
+
+Crescimento total médio: 2.76%
+
+==================================================
+TOP 5 - MAIOR CRESCIMENTO
+==================================================
+  ECR NORTE (INE: 0002403412): 101.95%
+  ECR 01 - NORTE (INE: 0002520079): 100.00%
+  ECR 01 - UBS 01 NB (INE: 0002380684): -3.16%
+  CONSULTORIO NA RUA (INE: 0001478311): -6.48%
+  ECR 02 - UBS 07 SAM (INE: 0002499398): -24.00%
+
+==================================================
+TOP 5 - MENOR CRESCIMENTO
+==================================================
+  EQUIPE MESTRE DAMIAO (INE: 0002237083): -40.55%
+  ECR 01 - UBS 05 TAG (INE: 0001478338): -38.00%
+  1227/63 (INE: 0002233339): -35.57%
+  ECR SUL (INE: 0001487094): -29.36%
+  ECR 02 - UBS 07 SAM (INE: 0002499398): -24.00%
+
+
+==================================================
+DADOS COMPLETOS
+==================================================
+
+ESTABELECIMENTO;INE;NOME DA EQUIPE;PONT_ABR_25;PONT_AGO_25;PONT_DEZ_25;VAR_1_2_%;VAR_2_3_%;CRESCIMENTO_TOTAL_%
+UBS 07 SAMAMBAIA;0002499398;ECR 02 - UBS 07 SAM;68.42;86.86;52.0;26.95;-40.13;-24.0
+UBS 7 GAMA;0002233339;1227/63;52.32;46.38;33.71;-11.35;-27.32;-35.57
+UBS 1 SOBRADINHO;0002520079;ECR 01 - NORTE;0.0;60.15;50.64;100.0;-15.81;100.0
+UBS 5 CEILANDIA;0001478311;CONSULTORIO NA RUA;25.15;30.32;23.52;20.56;-22.43;-6.48
+UBS 05 TAGUATINGA;0001478338;ECR 01 - UBS 05 TAG;42.47;36.32;26.33;-14.48;-27.51;-38.0
+UBS 1 ASA SUL;0001487094;ECR SUL;42.13;41.08;29.76;-2.49;-27.56;-29.36
+UBS 2 ASA NORTE;0002403412;ECR NORTE;9.22;15.58;18.62;68.98;19.51;101.95
+UBS 01 NUCLEO BANDEIRANTE;0002380684;ECR 01 - UBS 01 NB;50.88;55.38;49.27;8.84;-11.03;-3.16
+UBS 1 PARANOA;0002237083;EQUIPE MESTRE DAMIAO;50.33;41.26;29.92;-18.02;-27.48;-40.55

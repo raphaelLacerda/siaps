@@ -376,6 +376,17 @@ def download_single(
     # Nome do arquivo: <equipe>-<indicador>-<competencia>-relatorio-competencia
     base_name = f"{equipes_name}-{indicador_slug}-{comp_format}-relatorio-competencia"
 
+    # Verificar se arquivo já existe
+    csv_path = CSV_DIR / f"{base_name}.csv"
+    xlsx_path = XLSX_DIR / f"{base_name}.xlsx"
+
+    if csv_path.exists() and xlsx_path.exists():
+        print(
+            f"\n  [{indicador_nome}] Equipes: {equipes_name} | Competência: {comp_format}"
+        )
+        print(f"    Já baixado - pulando...")
+        return True
+
     print(
         f"\n  [{indicador_nome}] Equipes: {equipes_name} | Competência: {comp_format}"
     )

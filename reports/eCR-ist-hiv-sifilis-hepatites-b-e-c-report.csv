@@ -1,0 +1,49 @@
+﻿RELATÓRIO DE EVOLUÇÃO - IST (HIV/Sífilis/Hepatites B e C)
+Equipes: eCR
+Competências: ABR/25, AGO/25, DEZ/25
+
+==================================================
+RESUMO DAS VARIAÇÕES
+==================================================
+ABR_25: Média de pontuação = 16.53
+AGO_25: Média de pontuação = 16.95
+DEZ_25: Média de pontuação = 16.49
+
+% de crescimento entre 2025-04 e 2025-08: 5.56%
+% de crescimento entre 2025-08 e 2025-12: 2.53%
+
+Crescimento total médio: 1.84%
+
+==================================================
+TOP 5 - MAIOR CRESCIMENTO
+==================================================
+  ECR 01 - NORTE (INE: 0002520079): 100.00%
+  ECR NORTE (INE: 0002403412): 20.48%
+  EQUIPE MESTRE DAMIAO (INE: 0002237083): 15.90%
+  ECR SUL (INE: 0001487094): -10.73%
+  ECR 01 - UBS 01 NB (INE: 0002380684): -13.81%
+
+==================================================
+TOP 5 - MENOR CRESCIMENTO
+==================================================
+  CONSULTORIO NA RUA (INE: 0001478311): -37.11%
+  ECR 01 - UBS 05 TAG (INE: 0001478338): -24.32%
+  1227/63 (INE: 0002233339): -19.26%
+  ECR 02 - UBS 07 SAM (INE: 0002499398): -14.56%
+  ECR 01 - UBS 01 NB (INE: 0002380684): -13.81%
+
+
+==================================================
+DADOS COMPLETOS
+==================================================
+
+ESTABELECIMENTO;INE;NOME DA EQUIPE;PONT_ABR_25;PONT_AGO_25;PONT_DEZ_25;VAR_1_2_%;VAR_2_3_%;CRESCIMENTO_TOTAL_%
+UBS 07 SAMAMBAIA;0002499398;ECR 02 - UBS 07 SAM;35.86;38.56;30.64;7.53;-20.54;-14.56
+UBS 7 GAMA;0002233339;1227/63;18.12;15.07;14.63;-16.83;-2.92;-19.26
+UBS 1 SOBRADINHO;0002520079;ECR 01 - NORTE;0.0;14.09;22.48;100.0;59.55;100.0
+UBS 5 CEILANDIA;0001478311;CONSULTORIO NA RUA;24.63;17.32;15.49;-29.68;-10.57;-37.11
+UBS 05 TAGUATINGA;0001478338;ECR 01 - UBS 05 TAG;19.61;16.59;14.84;-15.4;-10.55;-24.32
+UBS 1 ASA SUL;0001487094;ECR SUL;11.37;11.11;10.15;-2.29;-8.64;-10.73
+UBS 2 ASA NORTE;0002403412;ECR NORTE;9.57;10.8;11.53;12.85;6.76;20.48
+UBS 01 NUCLEO BANDEIRANTE;0002380684;ECR 01 - UBS 01 NB;19.11;19.12;16.47;0.05;-13.86;-13.81
+UBS 1 PARANOA;0002237083;EQUIPE MESTRE DAMIAO;10.5;9.85;12.17;-6.19;23.55;15.9

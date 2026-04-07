@@ -20,12 +20,12 @@ matplotlib.use("Agg")  # Backend para salvar arquivos sem display
 BASE_DIR = Path(__file__).parent
 DOWNLOADS_DIR = BASE_DIR / "downloads"
 CSV_DIR = DOWNLOADS_DIR / "csv"
-GRAFICOS_DIR = BASE_DIR / "graficos"
+REPORTS_DIR = BASE_DIR / "reports"
 
 
 def ensure_directories():
     """Cria diretórios se não existirem"""
-    GRAFICOS_DIR.mkdir(parents=True, exist_ok=True)
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def load_config():
@@ -95,7 +95,18 @@ def read_csv_siaps(filepath: Path) -> pd.DataFrame:
         df[col] = df[col].str.replace('\t', '').str.replace('"', '').str.strip()
 
     # Converter PONTUAÇÃO para float
-    df["PONTUAÇÃO"] = df["PONTUAÇÃO"].str.replace(",", ".").astype(float)
+    # Trata formato brasileiro: "2.300,00" -> "2300.00"
+    def parse_brazilian_number(val):
+        if pd.isna(val) or val == "":
+            return 0.0
+        # Remove pontos de milhar e troca vírgula por ponto
+        val = str(val).replace(".", "").replace(",", ".")
+        try:
+            return float(val)
+        except ValueError:
+            return 0.0
+
+    df["PONTUAÇÃO"] = df["PONTUAÇÃO"].apply(parse_brazilian_number)
 
     return df
 
@@ -199,100 +210,51 @@ def get_top_and_bottom(df: pd.DataFrame, n: int = 5) -> tuple:
     return top_cresceram, menos_cresceram
 
 
-def generate_line_chart(equipes: list, indicador: dict, competencias: list, data: dict):
-    """Gera gráfico de linha para evolução das pontuações"""
-    if len(data) == 0:
+def generate_growth_chart(equipes: list, indicador: dict, df_report: pd.DataFrame):
+    """Gera gráfico de barras com crescimento de TODAS as equipes"""
+    if df_report is None or df_report.empty:
         return
 
     equipes_name = format_equipes_name(equipes)
     indicador_slug = slugify(indicador["nome"])
 
-    # Coletar todas as equipes e suas pontuações
-    teams_data = {}
+    # Ordenar por crescimento (maior para menor)
+    df_sorted = df_report.sort_values("CRESCIMENTO_TOTAL_%", ascending=True)
 
-    for comp, df in data.items():
-        for _, row in df.iterrows():
-            key = (row["INE"], row["NOME DA EQUIPE"])
-            if key not in teams_data:
-                teams_data[key] = {"nome": row["NOME DA EQUIPE"], "pontuacoes": {}}
-            teams_data[key]["pontuacoes"][comp] = row["PONTUAÇÃO"]
+    # Criar labels com nome + INE
+    labels = [f"{row['NOME DA EQUIPE'][:30]} ({row['INE']})" for _, row in df_sorted.iterrows()]
+    valores = df_sorted["CRESCIMENTO_TOTAL_%"].values
 
-    # Preparar dados para o gráfico
-    comp_labels = [format_competencia_display(c) for c in competencias]
+    # Cores: verde para positivo, vermelho para negativo
+    colors = ['green' if v >= 0 else 'red' for v in valores]
 
-    # Criar figura
-    fig, ax = plt.subplots(figsize=(14, 8))
+    # Ajustar tamanho da figura baseado na quantidade de equipes
+    num_equipes = len(df_sorted)
+    fig_height = max(8, num_equipes * 0.4)
 
-    # Plotar cada equipe
-    colors = plt.cm.tab20(np.linspace(0, 1, len(teams_data)))
+    fig, ax = plt.subplots(figsize=(14, fig_height))
 
-    for idx, (key, team_info) in enumerate(teams_data.items()):
-        ponts = [team_info["pontuacoes"].get(c, 0) for c in competencias]
-        nome_curto = team_info["nome"][:30] + "..." if len(team_info["nome"]) > 30 else team_info["nome"]
-        ax.plot(comp_labels, ponts, marker='o', label=nome_curto, color=colors[idx], linewidth=2)
+    bars = ax.barh(labels, valores, color=colors, alpha=0.7)
+    ax.set_xlabel("Crescimento Total (%)", fontsize=12)
+    ax.set_ylabel("Equipe (INE)", fontsize=12)
+    ax.set_title(f"Crescimento Total por Equipe - {indicador['nome']}\nEquipes: {equipes_name}", fontsize=14)
+    ax.axvline(x=0, color='black', linewidth=0.8)
+    ax.grid(True, axis='x', alpha=0.3)
 
-    ax.set_xlabel("Competência", fontsize=12)
-    ax.set_ylabel("Pontuação", fontsize=12)
-    ax.set_title(f"Evolução da Pontuação - {indicador['nome']}\nEquipes: {equipes_name}", fontsize=14)
-    ax.grid(True, alpha=0.3)
-
-    # Legenda
-    if len(teams_data) <= 15:
-        ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', fontsize=8)
-    else:
-        ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', fontsize=6, ncol=2)
+    # Adicionar valores nas barras
+    for bar, val in zip(bars, valores):
+        offset = 2 if val >= 0 else -2
+        ha = 'left' if val >= 0 else 'right'
+        ax.text(bar.get_width() + offset, bar.get_y() + bar.get_height()/2,
+                f'{val:.2f}%', va='center', ha=ha, fontsize=8)
 
     plt.tight_layout()
 
-    # Salvar
-    output_path = GRAFICOS_DIR / f"{equipes_name}-{indicador_slug}-evolucao.png"
+    output_path = REPORTS_DIR / f"{equipes_name}-{indicador_slug}-crescimento.png"
     plt.savefig(output_path, dpi=150, bbox_inches='tight')
     plt.close()
 
     print(f"    Gráfico salvo: {output_path.name}")
-
-
-def generate_top_bottom_chart(equipes: list, indicador: dict, top_cresceram: pd.DataFrame, menos_cresceram: pd.DataFrame):
-    """Gera gráfico de barras com top 5 que mais e menos cresceram"""
-    equipes_name = format_equipes_name(equipes)
-    indicador_slug = slugify(indicador["nome"])
-
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
-
-    # Top 5 que mais cresceram
-    if not top_cresceram.empty:
-        nomes_top = [n[:25] + "..." if len(n) > 25 else n for n in top_cresceram["NOME DA EQUIPE"]]
-        valores_top = top_cresceram["CRESCIMENTO_TOTAL_%"].values
-        bars1 = ax1.barh(nomes_top, valores_top, color='green', alpha=0.7)
-        ax1.set_xlabel("Crescimento Total (%)")
-        ax1.set_title("Top 5 - Maior Crescimento")
-        ax1.invert_yaxis()
-        for bar, val in zip(bars1, valores_top):
-            ax1.text(bar.get_width() + 1, bar.get_y() + bar.get_height()/2,
-                    f'{val:.1f}%', va='center', fontsize=9)
-
-    # Top 5 que menos cresceram
-    if not menos_cresceram.empty:
-        nomes_bottom = [n[:25] + "..." if len(n) > 25 else n for n in menos_cresceram["NOME DA EQUIPE"]]
-        valores_bottom = menos_cresceram["CRESCIMENTO_TOTAL_%"].values
-        colors = ['red' if v < 0 else 'orange' for v in valores_bottom]
-        bars2 = ax2.barh(nomes_bottom, valores_bottom, color=colors, alpha=0.7)
-        ax2.set_xlabel("Crescimento Total (%)")
-        ax2.set_title("Top 5 - Menor Crescimento")
-        ax2.invert_yaxis()
-        for bar, val in zip(bars2, valores_bottom):
-            offset = 1 if val >= 0 else -5
-            ax2.text(bar.get_width() + offset, bar.get_y() + bar.get_height()/2,
-                    f'{val:.1f}%', va='center', fontsize=9)
-
-    plt.suptitle(f"Análise de Crescimento - {indicador['nome']}\nEquipes: {equipes_name}", fontsize=14)
-    plt.tight_layout()
-
-    output_path = GRAFICOS_DIR / f"{equipes_name}-{indicador_slug}-top-bottom.png"
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    plt.close()
-
-    print(f"    Gráfico top/bottom salvo: {output_path.name}")
 
 
 def save_report(df: pd.DataFrame, equipes: list, indicador: dict, top_cresceram: pd.DataFrame, menos_cresceram: pd.DataFrame, competencias: list):
@@ -300,7 +262,7 @@ def save_report(df: pd.DataFrame, equipes: list, indicador: dict, top_cresceram:
     equipes_name = format_equipes_name(equipes)
     indicador_slug = slugify(indicador["nome"])
 
-    output_path = GRAFICOS_DIR / f"{equipes_name}-{indicador_slug}-report.csv"
+    output_path = REPORTS_DIR / f"{equipes_name}-{indicador_slug}-report.csv"
 
     with open(output_path, "w", encoding="utf-8-sig") as f:
         # Cabeçalho
@@ -335,24 +297,127 @@ def save_report(df: pd.DataFrame, equipes: list, indicador: dict, top_cresceram:
         f.write("TOP 5 - MAIOR CRESCIMENTO\n")
         f.write("=" * 50 + "\n")
         for _, row in top_cresceram.iterrows():
-            f.write(f"  {row['NOME DA EQUIPE']}: {row['CRESCIMENTO_TOTAL_%']:.2f}%\n")
+            f.write(f"  {row['NOME DA EQUIPE']} (INE: {row['INE']}): {row['CRESCIMENTO_TOTAL_%']:.2f}%\n")
 
         f.write("\n")
         f.write("=" * 50 + "\n")
         f.write("TOP 5 - MENOR CRESCIMENTO\n")
         f.write("=" * 50 + "\n")
         for _, row in menos_cresceram.iterrows():
-            f.write(f"  {row['NOME DA EQUIPE']}: {row['CRESCIMENTO_TOTAL_%']:.2f}%\n")
+            f.write(f"  {row['NOME DA EQUIPE']} (INE: {row['INE']}): {row['CRESCIMENTO_TOTAL_%']:.2f}%\n")
 
         f.write("\n\n")
         f.write("=" * 50 + "\n")
         f.write("DADOS COMPLETOS\n")
         f.write("=" * 50 + "\n\n")
 
-    # Append DataFrame
-    df.to_csv(output_path, mode="a", sep=";", index=False, encoding="utf-8-sig")
+    # Append DataFrame com 2 casas decimais
+    df_formatted = df.copy()
+    for col in df_formatted.columns:
+        if df_formatted[col].dtype in ['float64', 'float32']:
+            df_formatted[col] = df_formatted[col].round(2)
+    df_formatted.to_csv(output_path, mode="a", sep=";", index=False, encoding="utf-8-sig")
 
     print(f"    Relatório salvo: {output_path.name}")
+
+
+def get_top_and_bottom_by_score(df: pd.DataFrame, score_col: str, n: int = 5) -> tuple:
+    """Retorna top N maiores notas e top N menores notas"""
+    df_sorted = df.sort_values(score_col, ascending=False)
+    top_notas = df_sorted.head(n)
+    menores_notas = df_sorted.tail(n).iloc[::-1]
+    return top_notas, menores_notas
+
+
+def save_score_report(equipes: list, indicador: dict, competencias: list, data: dict):
+    """Salva relatório de notas por competência"""
+    if len(data) == 0:
+        return
+
+    equipes_name = format_equipes_name(equipes)
+    indicador_slug = slugify(indicador["nome"])
+
+    output_path = REPORTS_DIR / f"{equipes_name}-{indicador_slug}-notas-competencia.csv"
+
+    with open(output_path, "w", encoding="utf-8-sig") as f:
+        f.write(f"RELATÓRIO DE NOTAS POR COMPETÊNCIA - {indicador['nome']}\n")
+        f.write(f"Equipes: {', '.join(equipes)}\n")
+        f.write("\n")
+
+        for comp in competencias:
+            if comp not in data:
+                continue
+
+            df = data[comp]
+            comp_display = format_competencia_display(comp)
+
+            f.write("=" * 60 + "\n")
+            f.write(f"COMPETÊNCIA: {comp_display}\n")
+            f.write("=" * 60 + "\n\n")
+
+            top_notas, menores_notas = get_top_and_bottom_by_score(df, "PONTUAÇÃO")
+
+            f.write("TOP 5 - MAIORES NOTAS\n")
+            f.write("-" * 40 + "\n")
+            for _, row in top_notas.iterrows():
+                f.write(f"  {row['NOME DA EQUIPE']} (INE: {row['INE']}): {row['PONTUAÇÃO']:.2f}\n")
+
+            f.write("\n")
+            f.write("TOP 5 - MENORES NOTAS\n")
+            f.write("-" * 40 + "\n")
+            for _, row in menores_notas.iterrows():
+                f.write(f"  {row['NOME DA EQUIPE']} (INE: {row['INE']}): {row['PONTUAÇÃO']:.2f}\n")
+
+            f.write("\n\n")
+
+    print(f"    Relatório notas salvo: {output_path.name}")
+
+
+def generate_score_chart_by_competencia(equipes: list, indicador: dict, competencia: str, df: pd.DataFrame):
+    """Gera gráfico de barras com pontuação de TODAS as equipes para uma competência"""
+    if df is None or df.empty:
+        return
+
+    equipes_name = format_equipes_name(equipes)
+    indicador_slug = slugify(indicador["nome"])
+    comp_display = format_competencia_display(competencia)
+    comp_slug = competencia.replace("-", "")
+
+    # Ordenar por pontuação (maior para menor, mas ascending=True para barh)
+    df_sorted = df.sort_values("PONTUAÇÃO", ascending=True)
+
+    # Criar labels com nome + INE
+    labels = [f"{row['NOME DA EQUIPE'][:30]} ({row['INE']})" for _, row in df_sorted.iterrows()]
+    valores = df_sorted["PONTUAÇÃO"].values
+
+    # Cores baseadas na pontuação
+    max_val = valores.max() if len(valores) > 0 else 1
+    colors = plt.cm.RdYlGn([v / max_val if max_val > 0 else 0 for v in valores])
+
+    # Ajustar tamanho da figura baseado na quantidade de equipes
+    num_equipes = len(df_sorted)
+    fig_height = max(8, num_equipes * 0.4)
+
+    fig, ax = plt.subplots(figsize=(14, fig_height))
+
+    bars = ax.barh(labels, valores, color=colors, alpha=0.8)
+    ax.set_xlabel("Pontuação", fontsize=12)
+    ax.set_ylabel("Equipe (INE)", fontsize=12)
+    ax.set_title(f"Pontuação por Equipe - {indicador['nome']}\nCompetência: {comp_display} | Equipes: {equipes_name}", fontsize=14)
+    ax.grid(True, axis='x', alpha=0.3)
+
+    # Adicionar valores nas barras
+    for bar, val in zip(bars, valores):
+        ax.text(bar.get_width() + 0.5, bar.get_y() + bar.get_height()/2,
+                f'{val:.2f}', va='center', ha='left', fontsize=8)
+
+    plt.tight_layout()
+
+    output_path = REPORTS_DIR / f"{equipes_name}-{indicador_slug}-notas-{comp_slug}.png"
+    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.close()
+
+    print(f"    Gráfico notas {comp_display} salvo: {output_path.name}")
 
 
 def process_indicator(equipes: list, indicador: dict, competencias: list):
@@ -376,12 +441,19 @@ def process_indicator(equipes: list, indicador: dict, competencias: list):
     # Top e bottom
     top_cresceram, menos_cresceram = get_top_and_bottom(df_report)
 
-    # Salvar relatório
+    # Salvar relatório de evolução
     save_report(df_report, equipes, indicador, top_cresceram, menos_cresceram, competencias)
 
-    # Gerar gráficos
-    generate_line_chart(equipes, indicador, competencias, data)
-    generate_top_bottom_chart(equipes, indicador, top_cresceram, menos_cresceram)
+    # Gerar gráfico de evolução
+    generate_growth_chart(equipes, indicador, df_report)
+
+    # Salvar relatório de notas por competência
+    save_score_report(equipes, indicador, competencias, data)
+
+    # Gerar gráficos de notas por competência
+    for comp in competencias:
+        if comp in data:
+            generate_score_chart_by_competencia(equipes, indicador, comp, data[comp])
 
 
 def generate_reports(equipes_filter: list = None):
@@ -414,7 +486,7 @@ def generate_reports(equipes_filter: list = None):
     if equipes_filter:
         filtro_display = ', '.join('&'.join(gs) for gs in equipes_filter)
         print(f"Filtro de equipes: {filtro_display}")
-    print(f"Saída: {GRAFICOS_DIR}")
+    print(f"Saída: {REPORTS_DIR}")
     print("=" * 70)
 
     for grupo in equipes_config:
@@ -431,7 +503,7 @@ def generate_reports(equipes_filter: list = None):
 
     print("\n" + "=" * 70)
     print("Relatórios gerados com sucesso!")
-    print(f"Arquivos salvos em: {GRAFICOS_DIR}")
+    print(f"Arquivos salvos em: {REPORTS_DIR}")
     print("=" * 70)
 
 
