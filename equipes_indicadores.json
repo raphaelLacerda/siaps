@@ -1,0 +1,145 @@
+{
+    "competencias": [
+        "2025-04",
+        "2025-08",
+        "2025-12"
+    ],
+    "equipes": [
+        {
+            "sgEquipes": [
+                "eAP",
+                "eSF"
+            ],
+            "indicadores": [
+                {
+                    "nome": "maisAcesso",
+                    "codigo": 110
+                },
+                {
+                    "nome": "Desenvolvimento Infantil",
+                    "codigo": 108
+                },
+                {
+                    "nome": "Gestão e Puorpério",
+                    "codigo": 107
+                },
+                {
+                    "nome": "Diabetes",
+                    "codigo": 105
+                },
+                {
+                    "nome": "Hipertensão",
+                    "codigo": 104
+                },
+                {
+                    "nome": "Pessoa Idosa",
+                    "codigo": 106
+                },
+                {
+                    "nome": "Prevenção do Câncer",
+                    "codigo": 109
+                }
+            ]
+        },
+        {
+            "sgEquipes": [
+                "eSB"
+            ],
+            "indicadores": [
+                {
+                    "nome": "1ª Consulta Odontológica",
+                    "codigo": 111
+                },
+                {
+                    "nome": "Tratamento Odontológico concluído",
+                    "codigo": 112
+                },
+                {
+                    "nome": "Taxa de exodontias",
+                    "codigo": 113
+                },
+                {
+                    "nome": "Escovação Supervisionada",
+                    "codigo": 114
+                },
+                {
+                    "nome": "Procedimentos Odontológicos preventivos",
+                    "codigo": 115
+                },
+                {
+                    "nome": "Tratamento Restaurador Atraumático",
+                    "codigo": 116
+                }
+            ]
+        },
+        {
+            "sgEquipes": [
+                "eMulti"
+            ],
+            "indicadores": [
+                {
+                    "nome": "Média de atendimentos da eMulti por pessoa",
+                    "codigo": 117
+                },
+                {
+                    "nome": "Ações interprofissionais realizadas pela eMulti na APS",
+                    "codigo": 118
+                }
+            ]
+        },
+        {
+            "sgEquipes": [
+                "eCR"
+            ],
+            "indicadores": [
+                {
+                    "nome": "Mais Acesso",
+                    "codigo": 121
+                },
+                {
+                    "nome": "Gestação",
+                    "codigo": 122
+                },
+                {
+                    "nome": "IST (HIV/Sífilis/Hepatites B e C)",
+                    "codigo": 123
+                },
+                {
+                    "nome": "Tuberculose",
+                    "codigo": 124
+                }
+            ]
+        },
+        {
+            "sgEquipes": [
+                "eAPP"
+            ],
+            "indicadores": [
+                {
+                    "nome": "Mais Acesso",
+                    "codigo": 125
+                },
+                {
+                    "nome": "Gestação",
+                    "codigo": 126
+                },
+                {
+                    "nome": "Diabetes e/ou Hipertensão",
+                    "codigo": 127
+                },
+                {
+                    "nome": "IST (HIV/Sífilis/Hepatites B e C)",
+                    "codigo": 128
+                },
+                {
+                    "nome": "Tuberculose",
+                    "codigo": 129
+                },
+                {
+                    "nome": "Prevenção do Câncer",
+                    "codigo": 130
+                }
+            ]
+        }
+    ]
+}
