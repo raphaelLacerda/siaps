@@ -115,3 +115,23 @@ Arquivo de configuração: `equipes_indicadores.json` — edite conforme necess�
 
 Relatórios gerados em `downloads/csv` e `downloads/xlsx`.
 
+## Cálculo dos indicadores nos relatórios
+
+- Função usada: `calculate_growth(val_anterior, val_atual)` em [report_siaps.py](report_siaps.py#L144-L151).
+	- Se `val_anterior == 0`:
+		- se `val_atual == 0` → retorno `0.0%` (nenhuma variação);
+		- se `val_atual > 0` → retorno `100.0%` (o código trata crescimento "infinito" com cap de 100%);
+	- Caso geral: retorna `((val_atual - val_anterior) / val_anterior) * 100` (porcentagem de variação).
+
+- Campos calculados no relatório (implementação em [report_siaps.py](report_siaps.py#L192-L206)):
+	- `VAR_1_2_%`: variação percentual entre a primeira e a segunda competência (quando há pelo menos 2 competências);
+	- `VAR_2_3_%`: variação percentual entre a segunda e a terceira competência (quando há pelo menos 3 competências);
+	- `CRESCIMENTO_TOTAL_%`: variação percentual da primeira para a última competência (quando há pelo menos 2 competências) — calculada como `calculate_growth(pontuacoes[0], pontuacoes[-1])`.
+
+- Observações importantes:
+	- Equipes ausentes em uma competência (linha não encontrada no CSV) são tratadas como pontuação `0.0` nessa competência;
+	- As pontuações são lidas a partir da coluna `PONTUAÇÃO` nos CSVs e convertidas do formato brasileiro (`"2.300,00"`) para `float` antes dos cálculos;
+	- O relatório também calcula médias (ex.: média de `CRESCIMENTO_TOTAL_%`) e salva valores arredondados com duas casas decimais no CSV final.
+
+Se quiser, posso adicionar exemplos numéricos (casos com zeros e com aumento percentual) ao README para ilustrar o comportamento.
+

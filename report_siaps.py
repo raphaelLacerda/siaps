@@ -35,6 +35,16 @@ def load_config():
         return json.load(f)
 
 
+def filter_by_ines(df: pd.DataFrame, ines: list) -> pd.DataFrame:
+    """Filtra DataFrame mantendo apenas as linhas cujo INE está na lista.
+    Ignora zeros à esquerda na comparação (469513 == 0000469513)."""
+    if not ines:
+        return df
+    ines_normalized = {str(i).lstrip("0") for i in ines}
+    mask = df["INE"].str.lstrip("0").isin(ines_normalized)
+    return df[mask]
+
+
 def slugify(text: str) -> str:
     """Converte texto para slug (lowercase, hífens)"""
     acentos = {
@@ -111,7 +121,7 @@ def read_csv_siaps(filepath: Path) -> pd.DataFrame:
     return df
 
 
-def load_data_for_indicator(equipes: list, indicador: dict, competencias: list) -> dict:
+def load_data_for_indicator(equipes: list, indicador: dict, competencias: list, ines: list = None) -> dict:
     """Carrega dados de todas as competências para um indicador"""
     equipes_name = format_equipes_name(equipes)
     indicador_slug = slugify(indicador["nome"])
@@ -123,6 +133,7 @@ def load_data_for_indicator(equipes: list, indicador: dict, competencias: list) 
 
         if filepath.exists():
             df = read_csv_siaps(filepath)
+            df = filter_by_ines(df, ines)
             data[comp] = df
         else:
             print(f"  Aviso: Arquivo não encontrado: {filename}")
@@ -420,12 +431,12 @@ def generate_score_chart_by_competencia(equipes: list, indicador: dict, competen
     print(f"    Gráfico notas {comp_display} salvo: {output_path.name}")
 
 
-def process_indicator(equipes: list, indicador: dict, competencias: list):
+def process_indicator(equipes: list, indicador: dict, competencias: list, ines: list = None):
     """Processa um indicador completo"""
     print(f"\n  Processando indicador: {indicador['nome']}")
 
     # Carregar dados
-    data = load_data_for_indicator(equipes, indicador, competencias)
+    data = load_data_for_indicator(equipes, indicador, competencias, ines)
 
     if len(data) == 0:
         print(f"    Nenhum dado encontrado para o indicador")
@@ -462,6 +473,7 @@ def generate_reports(equipes_filter: list = None):
     config = load_config()
 
     competencias = config.get("competencias", [])
+    ines = config.get("ines", []) or None
     equipes_config = config.get("equipes", [])
 
     if equipes_filter:
@@ -499,7 +511,7 @@ def generate_reports(equipes_filter: list = None):
         print(f"{'='*70}")
 
         for indicador in indicadores:
-            process_indicator(equipes, indicador, competencias)
+            process_indicator(equipes, indicador, competencias, ines)
 
     print("\n" + "=" * 70)
     print("Relatórios gerados com sucesso!")
