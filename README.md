@@ -55,10 +55,38 @@ bearer_token=Bearer <seu_token_aqui>
 
 ## Uso
 
-Baixa todos os relatórios definidos em `equipes_indicadores.json`:
+Instale as dependências com pipenv:
 
 ```bash
-python download_siaps.py all
+pipenv install
+```
+
+**Baixar todos os grupos de equipes:**
+
+```bash
+pipenv run python download_siaps.py
+```
+
+**Baixar equipes específicas (separadas por espaço):**
+
+```bash
+pipenv run python download_siaps.py eMulti
+pipenv run python download_siaps.py eMulti eCR
+pipenv run python download_siaps.py eSB eAPP
+```
+
+**Baixar um grupo de equipes combinadas (ligadas por `&`):**
+
+Use `&` para referenciar um grupo que contenha *ambas* as equipes juntas no JSON:
+
+```bash
+pipenv run python download_siaps.py eAP&eSF
+```
+
+Combinações mistas também são suportadas:
+
+```bash
+pipenv run python download_siaps.py eAP&eSF eMulti eCR
 ```
 
 Saída padrão na execução mostra progresso e mensagens de erro HTTP quando ocorrem.
