@@ -1,0 +1,33 @@
+﻿RELATÓRIO DE CRESCIMENTO - Tuberculose
+Equipes: eCR
+Competências: ABR/25, AGO/25, DEZ/25
+
+==================================================
+RESUMO DAS VARIAÇÕES
+==================================================
+ABR_25: Média de pontuação = 41.67
+AGO_25: Média de pontuação = 25.00
+DEZ_25: Média de pontuação = 25.00
+
+% de crescimento entre 2025-04 e 2025-08: -40.00%
+% de crescimento entre 2025-08 e 2025-12: 0.00%
+
+Crescimento total médio: -40.00%
+
+==================================================
+TOP 5 - MAIOR CRESCIMENTO
+==================================================
+  EQUIPE MESTRE DAMIAO (INE: 0002237083): -40.00%
+
+==================================================
+TOP 5 - MENOR CRESCIMENTO
+==================================================
+  EQUIPE MESTRE DAMIAO (INE: 0002237083): -40.00%
+
+
+==================================================
+DADOS COMPLETOS
+==================================================
+
+ESTABELECIMENTO;INE;NOME DA EQUIPE;PONT_ABR_25;PONT_AGO_25;PONT_DEZ_25;VAR_1_2_%;VAR_2_3_%;CRESCIMENTO_TOTAL_%
+UBS 1 PARANOA;0002237083;EQUIPE MESTRE DAMIAO;41.67;25.0;25.0;-40.0;0.0;-40.0

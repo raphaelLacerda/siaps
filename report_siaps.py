@@ -48,18 +48,54 @@ def filter_by_ines(df: pd.DataFrame, ines: list) -> pd.DataFrame:
 def slugify(text: str) -> str:
     """Converte texto para slug (lowercase, hífens)"""
     acentos = {
-        "á": "a", "à": "a", "ã": "a", "â": "a", "ä": "a",
-        "é": "e", "è": "e", "ê": "e", "ë": "e",
-        "í": "i", "ì": "i", "î": "i", "ï": "i",
-        "ó": "o", "ò": "o", "õ": "o", "ô": "o", "ö": "o",
-        "ú": "u", "ù": "u", "û": "u", "ü": "u",
-        "ç": "c", "ñ": "n",
-        "Á": "a", "À": "a", "Ã": "a", "Â": "a", "Ä": "a",
-        "É": "e", "È": "e", "Ê": "e", "Ë": "e",
-        "Í": "i", "Ì": "i", "Î": "i", "Ï": "i",
-        "Ó": "o", "Ò": "o", "Õ": "o", "Ô": "o", "Ö": "o",
-        "Ú": "u", "Ù": "u", "Û": "u", "Ü": "u",
-        "Ç": "c", "Ñ": "n",
+        "á": "a",
+        "à": "a",
+        "ã": "a",
+        "â": "a",
+        "ä": "a",
+        "é": "e",
+        "è": "e",
+        "ê": "e",
+        "ë": "e",
+        "í": "i",
+        "ì": "i",
+        "î": "i",
+        "ï": "i",
+        "ó": "o",
+        "ò": "o",
+        "õ": "o",
+        "ô": "o",
+        "ö": "o",
+        "ú": "u",
+        "ù": "u",
+        "û": "u",
+        "ü": "u",
+        "ç": "c",
+        "ñ": "n",
+        "Á": "a",
+        "À": "a",
+        "Ã": "a",
+        "Â": "a",
+        "Ä": "a",
+        "É": "e",
+        "È": "e",
+        "Ê": "e",
+        "Ë": "e",
+        "Í": "i",
+        "Ì": "i",
+        "Î": "i",
+        "Ï": "i",
+        "Ó": "o",
+        "Ò": "o",
+        "Õ": "o",
+        "Ô": "o",
+        "Ö": "o",
+        "Ú": "u",
+        "Ù": "u",
+        "Û": "u",
+        "Ü": "u",
+        "Ç": "c",
+        "Ñ": "n",
     }
     for char, replacement in acentos.items():
         text = text.replace(char, replacement)
@@ -78,9 +114,18 @@ def format_equipes_name(equipes: list) -> str:
 def format_competencia_display(competencia: str) -> str:
     """Converte 2025-04 para ABR/25"""
     meses = {
-        "01": "JAN", "02": "FEV", "03": "MAR", "04": "ABR",
-        "05": "MAI", "06": "JUN", "07": "JUL", "08": "AGO",
-        "09": "SET", "10": "OUT", "11": "NOV", "12": "DEZ",
+        "01": "JAN",
+        "02": "FEV",
+        "03": "MAR",
+        "04": "ABR",
+        "05": "MAI",
+        "06": "JUN",
+        "07": "JUL",
+        "08": "AGO",
+        "09": "SET",
+        "10": "OUT",
+        "11": "NOV",
+        "12": "DEZ",
     }
     parts = competencia.split("-")
     ano = parts[0][2:4]
@@ -92,17 +137,11 @@ def read_csv_siaps(filepath: Path) -> pd.DataFrame:
     """Lê CSV do SIAPS pulando as linhas de cabeçalho"""
     # Os CSVs têm 17 linhas de cabeçalho antes dos dados
     # Linha 18 é o cabeçalho das colunas
-    df = pd.read_csv(
-        filepath,
-        sep=";",
-        encoding="utf-8-sig",
-        skiprows=17,
-        dtype=str
-    )
+    df = pd.read_csv(filepath, sep=";", encoding="utf-8-sig", skiprows=17, dtype=str)
 
     # Limpar valores (remover tabs e aspas)
     for col in df.columns:
-        df[col] = df[col].str.replace('\t', '').str.replace('"', '').str.strip()
+        df[col] = df[col].str.replace("\t", "").str.replace('"', "").str.strip()
 
     # Converter PONTUAÇÃO para float
     # Trata formato brasileiro: "2.300,00" -> "2300.00"
@@ -121,7 +160,9 @@ def read_csv_siaps(filepath: Path) -> pd.DataFrame:
     return df
 
 
-def load_data_for_indicator(equipes: list, indicador: dict, competencias: list, ines: list = None) -> dict:
+def load_data_for_indicator(
+    equipes: list, indicador: dict, competencias: list, ines: list = None
+) -> dict:
     """Carrega dados de todas as competências para um indicador"""
     equipes_name = format_equipes_name(equipes)
     indicador_slug = slugify(indicador["nome"])
@@ -150,7 +191,9 @@ def calculate_growth(val_anterior, val_atual):
     return ((val_atual - val_anterior) / val_anterior) * 100
 
 
-def generate_report_for_indicator(equipes: list, indicador: dict, competencias: list, data: dict) -> pd.DataFrame:
+def generate_report_for_indicator(
+    equipes: list, indicador: dict, competencias: list, data: dict
+) -> pd.DataFrame:
     """Gera relatório consolidado para um indicador"""
     if len(data) == 0:
         return None
@@ -217,7 +260,9 @@ def get_top_and_bottom(df: pd.DataFrame, n: int = 5) -> tuple:
     """Retorna top N que mais cresceram e top N que menos cresceram"""
     df_sorted = df.sort_values("CRESCIMENTO_TOTAL_%", ascending=False)
     top_cresceram = df_sorted.head(n)
-    menos_cresceram = df_sorted.tail(n).iloc[::-1]  # Inverter para mostrar do menor para maior
+    menos_cresceram = df_sorted.tail(n).iloc[
+        ::-1
+    ]  # Inverter para mostrar do menor para maior
     return top_cresceram, menos_cresceram
 
 
@@ -233,11 +278,14 @@ def generate_growth_chart(equipes: list, indicador: dict, df_report: pd.DataFram
     df_sorted = df_report.sort_values("CRESCIMENTO_TOTAL_%", ascending=True)
 
     # Criar labels com nome + INE
-    labels = [f"{row['NOME DA EQUIPE'][:30]} ({row['INE']})" for _, row in df_sorted.iterrows()]
+    labels = [
+        f"{row['NOME DA EQUIPE'][:30]} ({row['INE']})"
+        for _, row in df_sorted.iterrows()
+    ]
     valores = df_sorted["CRESCIMENTO_TOTAL_%"].values
 
     # Cores: verde para positivo, vermelho para negativo
-    colors = ['green' if v >= 0 else 'red' for v in valores]
+    colors = ["green" if v >= 0 else "red" for v in valores]
 
     # Ajustar tamanho da figura baseado na quantidade de equipes
     num_equipes = len(df_sorted)
@@ -248,38 +296,56 @@ def generate_growth_chart(equipes: list, indicador: dict, df_report: pd.DataFram
     bars = ax.barh(labels, valores, color=colors, alpha=0.7)
     ax.set_xlabel("Crescimento Total (%)", fontsize=12)
     ax.set_ylabel("Equipe (INE)", fontsize=12)
-    ax.set_title(f"Crescimento Total por Equipe - {indicador['nome']}\nEquipes: {equipes_name}", fontsize=14)
-    ax.axvline(x=0, color='black', linewidth=0.8)
-    ax.grid(True, axis='x', alpha=0.3)
+    ax.set_title(
+        f"Crescimento Total por Equipe - {indicador['nome']}\nEquipes: {equipes_name}",
+        fontsize=14,
+    )
+    ax.axvline(x=0, color="black", linewidth=0.8)
+    ax.grid(True, axis="x", alpha=0.3)
 
     # Adicionar valores nas barras
     for bar, val in zip(bars, valores):
         offset = 2 if val >= 0 else -2
-        ha = 'left' if val >= 0 else 'right'
-        ax.text(bar.get_width() + offset, bar.get_y() + bar.get_height()/2,
-                f'{val:.2f}%', va='center', ha=ha, fontsize=8)
+        ha = "left" if val >= 0 else "right"
+        ax.text(
+            bar.get_width() + offset,
+            bar.get_y() + bar.get_height() / 2,
+            f"{val:.2f}%",
+            va="center",
+            ha=ha,
+            fontsize=8,
+        )
 
     plt.tight_layout()
 
     output_path = REPORTS_DIR / f"{equipes_name}-{indicador_slug}-crescimento.png"
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.savefig(output_path, dpi=150, bbox_inches="tight")
     plt.close()
 
     print(f"    Gráfico salvo: {output_path.name}")
 
 
-def save_report(df: pd.DataFrame, equipes: list, indicador: dict, top_cresceram: pd.DataFrame, menos_cresceram: pd.DataFrame, competencias: list):
+def save_report(
+    df: pd.DataFrame,
+    equipes: list,
+    indicador: dict,
+    top_cresceram: pd.DataFrame,
+    menos_cresceram: pd.DataFrame,
+    competencias: list,
+):
     """Salva relatório em CSV"""
     equipes_name = format_equipes_name(equipes)
     indicador_slug = slugify(indicador["nome"])
 
-    output_path = REPORTS_DIR / f"{equipes_name}-{indicador_slug}-report.csv"
+    output_path = REPORTS_DIR / f"{equipes_name}-{indicador_slug}-crescimento.csv"
 
     with open(output_path, "w", encoding="utf-8-sig") as f:
         # Cabeçalho
-        f.write(f"RELATÓRIO DE EVOLUÇÃO - {indicador['nome']}\n")
+        f.write(f"RELATÓRIO DE CRESCIMENTO - {indicador['nome']}\n")
         f.write(f"Equipes: {', '.join(equipes)}\n")
-        f.write(f"Competências: {', '.join([format_competencia_display(c) for c in competencias])}\n")
+        f.write(
+            f"Competências: {', '.join([format_competencia_display(c) for c in competencias])}\n"
+        )
         f.write("\n")
 
         # Resumo de variação
@@ -294,11 +360,15 @@ def save_report(df: pd.DataFrame, equipes: list, indicador: dict, top_cresceram:
 
         if "VAR_1_2_%" in df.columns:
             media_var1 = df["VAR_1_2_%"].mean()
-            f.write(f"\n% de crescimento entre {competencias[0]} e {competencias[1]}: {media_var1:.2f}%\n")
+            f.write(
+                f"\n% de crescimento entre {competencias[0]} e {competencias[1]}: {media_var1:.2f}%\n"
+            )
 
         if "VAR_2_3_%" in df.columns:
             media_var2 = df["VAR_2_3_%"].mean()
-            f.write(f"% de crescimento entre {competencias[1]} e {competencias[2]}: {media_var2:.2f}%\n")
+            f.write(
+                f"% de crescimento entre {competencias[1]} e {competencias[2]}: {media_var2:.2f}%\n"
+            )
 
         media_total = df["CRESCIMENTO_TOTAL_%"].mean()
         f.write(f"\nCrescimento total médio: {media_total:.2f}%\n")
@@ -308,14 +378,18 @@ def save_report(df: pd.DataFrame, equipes: list, indicador: dict, top_cresceram:
         f.write("TOP 5 - MAIOR CRESCIMENTO\n")
         f.write("=" * 50 + "\n")
         for _, row in top_cresceram.iterrows():
-            f.write(f"  {row['NOME DA EQUIPE']} (INE: {row['INE']}): {row['CRESCIMENTO_TOTAL_%']:.2f}%\n")
+            f.write(
+                f"  {row['NOME DA EQUIPE']} (INE: {row['INE']}): {row['CRESCIMENTO_TOTAL_%']:.2f}%\n"
+            )
 
         f.write("\n")
         f.write("=" * 50 + "\n")
         f.write("TOP 5 - MENOR CRESCIMENTO\n")
         f.write("=" * 50 + "\n")
         for _, row in menos_cresceram.iterrows():
-            f.write(f"  {row['NOME DA EQUIPE']} (INE: {row['INE']}): {row['CRESCIMENTO_TOTAL_%']:.2f}%\n")
+            f.write(
+                f"  {row['NOME DA EQUIPE']} (INE: {row['INE']}): {row['CRESCIMENTO_TOTAL_%']:.2f}%\n"
+            )
 
         f.write("\n\n")
         f.write("=" * 50 + "\n")
@@ -325,9 +399,11 @@ def save_report(df: pd.DataFrame, equipes: list, indicador: dict, top_cresceram:
     # Append DataFrame com 2 casas decimais
     df_formatted = df.copy()
     for col in df_formatted.columns:
-        if df_formatted[col].dtype in ['float64', 'float32']:
+        if df_formatted[col].dtype in ["float64", "float32"]:
             df_formatted[col] = df_formatted[col].round(2)
-    df_formatted.to_csv(output_path, mode="a", sep=";", index=False, encoding="utf-8-sig")
+    df_formatted.to_csv(
+        output_path, mode="a", sep=";", index=False, encoding="utf-8-sig"
+    )
 
     print(f"    Relatório salvo: {output_path.name}")
 
@@ -371,20 +447,26 @@ def save_score_report(equipes: list, indicador: dict, competencias: list, data: 
             f.write("TOP 5 - MAIORES NOTAS\n")
             f.write("-" * 40 + "\n")
             for _, row in top_notas.iterrows():
-                f.write(f"  {row['NOME DA EQUIPE']} (INE: {row['INE']}): {row['PONTUAÇÃO']:.2f}\n")
+                f.write(
+                    f"  {row['NOME DA EQUIPE']} (INE: {row['INE']}): {row['PONTUAÇÃO']:.2f}\n"
+                )
 
             f.write("\n")
             f.write("TOP 5 - MENORES NOTAS\n")
             f.write("-" * 40 + "\n")
             for _, row in menores_notas.iterrows():
-                f.write(f"  {row['NOME DA EQUIPE']} (INE: {row['INE']}): {row['PONTUAÇÃO']:.2f}\n")
+                f.write(
+                    f"  {row['NOME DA EQUIPE']} (INE: {row['INE']}): {row['PONTUAÇÃO']:.2f}\n"
+                )
 
             f.write("\n\n")
 
     print(f"    Relatório notas salvo: {output_path.name}")
 
 
-def generate_score_chart_by_competencia(equipes: list, indicador: dict, competencia: str, df: pd.DataFrame):
+def generate_score_chart_by_competencia(
+    equipes: list, indicador: dict, competencia: str, df: pd.DataFrame
+):
     """Gera gráfico de barras com pontuação de TODAS as equipes para uma competência"""
     if df is None or df.empty:
         return
@@ -398,7 +480,10 @@ def generate_score_chart_by_competencia(equipes: list, indicador: dict, competen
     df_sorted = df.sort_values("PONTUAÇÃO", ascending=True)
 
     # Criar labels com nome + INE
-    labels = [f"{row['NOME DA EQUIPE'][:30]} ({row['INE']})" for _, row in df_sorted.iterrows()]
+    labels = [
+        f"{row['NOME DA EQUIPE'][:30]} ({row['INE']})"
+        for _, row in df_sorted.iterrows()
+    ]
     valores = df_sorted["PONTUAÇÃO"].values
 
     # Cores baseadas na pontuação
@@ -414,24 +499,35 @@ def generate_score_chart_by_competencia(equipes: list, indicador: dict, competen
     bars = ax.barh(labels, valores, color=colors, alpha=0.8)
     ax.set_xlabel("Pontuação", fontsize=12)
     ax.set_ylabel("Equipe (INE)", fontsize=12)
-    ax.set_title(f"Pontuação por Equipe - {indicador['nome']}\nCompetência: {comp_display} | Equipes: {equipes_name}", fontsize=14)
-    ax.grid(True, axis='x', alpha=0.3)
+    ax.set_title(
+        f"Pontuação por Equipe - {indicador['nome']}\nCompetência: {comp_display} | Equipes: {equipes_name}",
+        fontsize=14,
+    )
+    ax.grid(True, axis="x", alpha=0.3)
 
     # Adicionar valores nas barras
     for bar, val in zip(bars, valores):
-        ax.text(bar.get_width() + 0.5, bar.get_y() + bar.get_height()/2,
-                f'{val:.2f}', va='center', ha='left', fontsize=8)
+        ax.text(
+            bar.get_width() + 0.5,
+            bar.get_y() + bar.get_height() / 2,
+            f"{val:.2f}",
+            va="center",
+            ha="left",
+            fontsize=8,
+        )
 
     plt.tight_layout()
 
     output_path = REPORTS_DIR / f"{equipes_name}-{indicador_slug}-notas-{comp_slug}.png"
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.savefig(output_path, dpi=150, bbox_inches="tight")
     plt.close()
 
     print(f"    Gráfico notas {comp_display} salvo: {output_path.name}")
 
 
-def process_indicator(equipes: list, indicador: dict, competencias: list, ines: list = None):
+def process_indicator(
+    equipes: list, indicador: dict, competencias: list, ines: list = None
+):
     """Processa um indicador completo"""
     print(f"\n  Processando indicador: {indicador['nome']}")
 
@@ -453,7 +549,9 @@ def process_indicator(equipes: list, indicador: dict, competencias: list, ines: 
     top_cresceram, menos_cresceram = get_top_and_bottom(df_report)
 
     # Salvar relatório de evolução
-    save_report(df_report, equipes, indicador, top_cresceram, menos_cresceram, competencias)
+    save_report(
+        df_report, equipes, indicador, top_cresceram, menos_cresceram, competencias
+    )
 
     # Gerar gráfico de evolução
     generate_growth_chart(equipes, indicador, df_report)
@@ -473,10 +571,10 @@ def generate_reports(equipes_filter: list = None):
     config = load_config()
 
     competencias = config.get("competencias", [])
-    ines = config.get("ines", []) or None
     equipes_config = config.get("equipes", [])
 
     if equipes_filter:
+
         def grupo_matches(grupo):
             sg = {s.upper() for s in grupo.get("sgEquipes", [])}
             for group_set in equipes_filter:
@@ -486,7 +584,7 @@ def generate_reports(equipes_filter: list = None):
 
         equipes_config = [g for g in equipes_config if grupo_matches(g)]
         if not equipes_config:
-            filtro_display = ', '.join('&'.join(gs) for gs in equipes_filter)
+            filtro_display = ", ".join("&".join(gs) for gs in equipes_filter)
             print(f"Nenhum grupo encontrado para o filtro: {filtro_display}")
             return
 
@@ -496,7 +594,7 @@ def generate_reports(equipes_filter: list = None):
     print(f"Competências: {', '.join(competencias)}")
     print(f"Grupos de equipes: {len(equipes_config)}")
     if equipes_filter:
-        filtro_display = ', '.join('&'.join(gs) for gs in equipes_filter)
+        filtro_display = ", ".join("&".join(gs) for gs in equipes_filter)
         print(f"Filtro de equipes: {filtro_display}")
     print(f"Saída: {REPORTS_DIR}")
     print("=" * 70)
@@ -510,6 +608,8 @@ def generate_reports(equipes_filter: list = None):
         print(f"Indicadores: {len(indicadores)}")
         print(f"{'='*70}")
 
+        ines = grupo.get("ines", []) or None
+
         for indicador in indicadores:
             process_indicator(equipes, indicador, competencias, ines)
 
@@ -520,7 +620,9 @@ def generate_reports(equipes_filter: list = None):
 
 
 def main():
-    equipes_filter = [arg.split('&') for arg in sys.argv[1:]] if len(sys.argv) > 1 else None
+    equipes_filter = (
+        [arg.split("&") for arg in sys.argv[1:]] if len(sys.argv) > 1 else None
+    )
     generate_reports(equipes_filter)
 
 
