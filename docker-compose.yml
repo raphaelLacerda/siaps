@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: alyne-postgres
+    environment:
+      POSTGRES_USER: alyne
+      POSTGRES_PASSWORD: alyne123
+      POSTGRES_DB: siaps
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alyne -d siaps"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  flyway:
+    image: flyway/flyway:10
+    container_name: alyne-flyway
+    command: -url=jdbc:postgresql://postgres:5432/siaps -user=alyne -password=alyne123 -connectRetries=10 migrate
+    volumes:
+      - ./db/migrations:/flyway/sql:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  importer:
+    build:
+      context: .
+      dockerfile: Dockerfile.importer
+    container_name: alyne-importer
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: siaps
+      DB_USER: alyne
+      DB_PASSWORD: alyne123
+      CSV_DIR: /app/downloads/csv
+      REPORTS_DIR: /app/reports
+    volumes:
+      - ./downloads/csv:/app/downloads/csv:ro
+      - ./reports:/app/reports:ro
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
+
+  metabase:
+    image: metabase/metabase:latest
+    container_name: alyne-metabase
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: metabase
+      MB_DB_PORT: 5432
+      MB_DB_USER: alyne
+      MB_DB_PASS: alyne123
+      MB_DB_HOST: postgres
+    ports:
+      - "3000:3000"
+    depends_on:
+      importer:
+        condition: service_completed_successfully
+    volumes:
+      - metabase_data:/metabase-data
+
+volumes:
+  postgres_data:
+  metabase_data:
