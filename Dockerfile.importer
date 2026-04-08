@@ -5,7 +5,14 @@ WORKDIR /app
 # Instala dependências
 RUN pip install --no-cache-dir psycopg2-binary
 
-# Copia script
+# Copia migrations e scripts
+COPY db/migrations/ /app/db/migrations/
+COPY migrate.py .
 COPY import_csv.py .
 
-CMD ["python", "import_csv.py"]
+# Copia dados já baixados (CSVs e reports rastreados no git)
+COPY downloads/csv/ /app/downloads/csv/
+COPY reports/ /app/reports/
+
+# Roda migrations, importa CSVs e dorme para evitar restart loop no Render
+CMD ["sh", "-c", "python migrate.py && python import_csv.py && echo 'Concluído. Aguardando...' && sleep infinity"]

@@ -1,0 +1,71 @@
+databases:
+  - name: siaps-db
+    databaseName: siaps
+    user: alyne
+    plan: free  # trocar para "starter" ($7/mo) antes dos 90 dias expirarem
+
+services:
+  # ── Metabase ──────────────────────────────────────────────────────────────
+  - type: web
+    name: alyne-metabase
+    plan: starter  # free tier dorme apos 15min — ruim para BI (JVM demora ~60s para acordar)
+    image:
+      url: docker.io/metabase/metabase:latest
+    envVars:
+      - key: MB_DB_TYPE
+        value: postgres
+      - key: MB_DB_HOST
+        fromDatabase:
+          name: siaps-db
+          property: host
+      - key: MB_DB_PORT
+        fromDatabase:
+          name: siaps-db
+          property: port
+      - key: MB_DB_DBNAME
+        value: siaps
+      - key: MB_DB_USER
+        fromDatabase:
+          name: siaps-db
+          property: user
+      - key: MB_DB_PASS
+        fromDatabase:
+          name: siaps-db
+          property: password
+      - key: JAVA_TIMEZONE
+        value: America/Sao_Paulo
+    disk:
+      name: metabase-data
+      mountPath: /metabase-data
+      sizeGB: 1
+    healthCheckPath: /api/health
+
+  # ── Importer (migracoes + importacao de CSVs) ─────────────────────────────
+  - type: worker
+    name: alyne-importer
+    plan: starter
+    runtime: docker
+    dockerfilePath: ./Dockerfile.importer
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: siaps-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: siaps-db
+          property: port
+      - key: DB_NAME
+        value: siaps
+      - key: DB_USER
+        fromDatabase:
+          name: siaps-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: siaps-db
+          property: password
+      - key: CSV_DIR
+        value: /app/downloads/csv
+      - key: REPORTS_DIR
+        value: /app/reports
