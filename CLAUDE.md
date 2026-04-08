@@ -155,3 +155,87 @@ Para adicionar novas migrations, crie arquivos `V<N>__<descricao>.sql`.
 docker-compose down        # para os containers
 docker-compose down -v     # para e remove volumes (dados)
 ```
+
+## Deploy no Render (Free Tier)
+
+Deploy gratuito usando PostgreSQL + Metabase no Render.
+
+### Passo 1: Criar o banco PostgreSQL
+
+1. Acesse https://dashboard.render.com
+2. Clique em **New** → **PostgreSQL**
+3. Configure:
+   - **Name**: `siaps-db`
+   - **Database**: `siaps`
+   - **User**: `alyne`
+   - **Region**: escolha a mais próxima
+   - **Plan**: **Free** (expira em 90 dias)
+4. Clique em **Create Database**
+5. Aguarde o banco ficar "Available"
+6. Copie a **External Database URL**
+
+### Passo 2: Importar dados localmente
+
+```bash
+# Exportar a URL do banco (copie do Render)
+export DATABASE_URL="postgres://alyne:SENHA@HOST:5432/siaps"
+
+# Rodar migrations + importação
+pipenv run python deploy_render.py
+```
+
+### Passo 3: Criar o Metabase
+
+1. No Render, clique em **New** → **Web Service**
+2. Configure:
+   - **Name**: `alyne-metabase`
+   - **Region**: mesma do banco
+   - **Runtime**: **Docker**
+   - **Image URL**: `docker.io/metabase/metabase:latest`
+   - **Plan**: **Free** (dorme após 15 min de inatividade)
+3. Adicione as **Environment Variables**:
+   ```
+   MB_DB_TYPE=postgres
+   MB_DB_HOST=<host do banco - veja no Render>
+   MB_DB_PORT=5432
+   MB_DB_DBNAME=siaps
+   MB_DB_USER=alyne
+   MB_DB_PASS=<senha do banco>
+   JAVA_TIMEZONE=America/Sao_Paulo
+   ```
+4. Clique em **Create Web Service**
+
+### Passo 4: Configurar o Metabase
+
+1. Acesse a URL do seu Metabase (ex: `https://alyne-metabase.onrender.com`)
+2. Crie uma conta admin
+3. Adicione o banco de dados:
+   - Tipo: **PostgreSQL**
+   - Host: mesmo do `MB_DB_HOST`
+   - Porta: `5432`
+   - Database: `siaps`
+   - User: `alyne`
+   - Password: mesma do `MB_DB_PASS`
+
+### Atualizar dados
+
+Quando baixar novos CSVs:
+
+```bash
+# 1. Baixar novos dados
+pipenv run python download_siaps.py
+
+# 2. Reimportar para o Render
+export DATABASE_URL="postgres://..."
+pipenv run python deploy_render.py
+```
+
+### Limitações do Free Tier
+
+| Recurso | Limitação |
+|---------|-----------|
+| PostgreSQL | Expira em 90 dias |
+| Metabase | Dorme após 15 min, ~60s para acordar |
+| Storage | 1 GB no banco |
+
+Para uso contínuo, considere o plano **Starter** ($7/mês por serviço).
